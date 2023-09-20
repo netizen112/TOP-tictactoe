@@ -9,23 +9,40 @@
     </head>
     <body>
         <section class="sidebar">
-            <button class="gameButton" id="new-game">New Game</button>
-            <button class="gameButton">End Game</button>
+            <button class="gameButton" id="new-game-btn">New Game</button>
+            <!-- <button class="gameButton">End Game</button> -->
         </section>
         <nav class="nav"><h1>Tic Tac Toe</h1></nav>
         <section class="main">
-            <h1 class="gameInfo">Game Over</h1>
+            <h1 class="gameInfo" id="game-display">Game Over</h1>
             <div class="gameboard">
-                <div class="tile data-tile0">0</div>
-                <div class="tile data-tile1">1</div>
-                <div class="tile data-tile2">2</div>
-                <div class="tile data-tile3">3</div>
-                <div class="tile data-tile4">4</div>
-                <div class="tile data-tile5">5</div>
-                <div class="tile data-tile6">6</div>
-                <div class="tile data-tile7">7</div>
-                <div class="tile data-tile8">8</div>
+                <div class="tile tile0" data-tile="0"> </div>
+                <div class="tile tile1" data-tile="1"> </div>
+                <div class="tile tile2" data-tile="2"> </div>
+                <div class="tile tile3" data-tile="3"> </div>
+                <div class="tile tile4" data-tile="4"> </div>
+                <div class="tile tile5" data-tile="5"> </div>
+                <div class="tile tile6" data-tile="6"> </div>
+                <div class="tile tile7" data-tile="7"> </div>
+                <div class="tile tile8" data-tile="8"> </div>
             </div>
         </section>
+        <dialog id="new-game-dialog">
+            <form method="dialog">
+                <label for="player1name"
+                    >Player 1<input
+                        name="player1name"
+                        type="text"
+                        id="player-1-input"
+                /></label>
+                <label for="player2name"
+                    >Player 2<input
+                        name="player2name"
+                        type="text"
+                        id="player-2-input"
+                /></label>
+                <button id="btn-game-start">Start!</button>
+            </form>
+        </dialog>
     </body>
 </html>

@@ -18,7 +18,7 @@ let gameBoardModule = (function () {
     }
 
     function getGameArray() {
-        return gameArray;
+        return [...gameArray]; // Returning a copy. Not sure if not returning a copy returns reference
     }
 
     function setGameArray(index, letter) {
@@ -55,22 +55,25 @@ let gameModule = (function () {
 
     //sets up a new game
     function newGame(p1name, p1letter, p2name, p2letter) {
+        gameBoardModule.initializeArray();
+
         player1 = playerFactory(p1name, p1letter);
         player2 = playerFactory(p2name, p2letter);
 
-        round.num = 0;
+        round.num = 1;
+        round.currPlayer = 1;
+        currPos.player = 1;
 
         return "New Game Successfully Created";
     }
 
-    function playRound(tile, player) {
-        if (round.num == 0) {
+    function playRound(tile) {
+        if (round.num == 1) {
             round.game++;
-            round.currPlayer = 1;
         }
 
         currPos.tile = tile;
-        currPos.player = player;
+        currPos.player = round.currPlayer;
 
         let currLetter =
             currPos.player == 1
@@ -79,10 +82,21 @@ let gameModule = (function () {
                 ? player2.letter
                 : "ERROR";
         gameBoardModule.setGameArray(currPos.tile, currLetter);
-        checkWin(currPos)
 
-        round.currPlayer = round.currPlayer == 1 ? 2 : 1;
-        round.num++;
+        function gameOver() {}
+
+        let status = checkWin(currPos);
+        if (status === true) {
+            gameOver();
+            return "WIN";
+        } else if (status == "DRAW") {
+            gameOver();
+            return "DRAW";
+        } else {
+            round.currPlayer = round.currPlayer == 1 ? 2 : 1;
+            round.num++;
+            return "GAME CONTINUES";
+        }
     }
 
     //Checks if there is a win. Parameter - Current Position (Object?)
@@ -90,77 +104,140 @@ let gameModule = (function () {
         let gameArray = gameBoardModule.getGameArray();
 
         if (gameArray[0] == gameArray[1] && gameArray[0] == gameArray[2]) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[3] == gameArray[4] &&
             gameArray[3] == gameArray[5]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[6] == gameArray[7] &&
             gameArray[6] == gameArray[8]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[0] == gameArray[4] &&
             gameArray[0] == gameArray[8]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[0] == gameArray[3] &&
             gameArray[0] == gameArray[6]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[1] == gameArray[4] &&
             gameArray[1] == gameArray[7]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[2] == gameArray[5] &&
             gameArray[2] == gameArray[8]
         ) {
-            winGame(currPos);
+            return true;
         } else if (
             gameArray[2] == gameArray[4] &&
             gameArray[2] == gameArray[6]
         ) {
-            winGame(currPos);
+            return true;
+        } else if (
+            gameBoardModule.getGameArray().every((elem) => {
+                if (elem == "X" || elem == "O") return true;
+                else return false;
+            })
+        ) {
+            return "DRAW";
         } else {
-            checkGame(currPos);
+            return false;
         }
     }
-
-    function winGame(currPos) {
-        console.log(`Player `);
-
-
-    }
-
-    function checkGame(currPos) {}
 
     function getPlayer(num) {
         return num == 1 ? player1 : num == 2 ? player2 : -1;
     }
 
-    return { checkWin, newGame, playRound, getPlayer };
+    function getRound() {
+        return round;
+    }
+
+    return { checkWin, newGame, playRound, getPlayer, getRound };
 })();
 
 // ----------------------------------------------------------------- //
 
 const displayControlModule = (function () {
+    const gameDisplay = document.getElementById("game-display");
+
+    function updateBoard(tileNum, letter) {
+        let tile = document.querySelector(`.tile${tileNum}`);
+        tile.innerText = letter;
+    }
+
+    function gameOver() {
+        let tiles = document.querySelectorAll(".tile");
+        tiles.forEach((tile) => {
+            tile.removeEventListener("click", handleClick);
+        });
+    }
+
     function handleClick(e) {
-        console.log(e);
+        const tileNum = parseInt(e.target.dataset.tile);
+
+        // Prevents playing in spots that are already taken
+        const gameArray = gameBoardModule.getGameArray();
+        if (gameArray[tileNum] == "X" || gameArray[tileNum] == "O") {
+            alert("Invalid Move! Select an empty position");
+            return;
+        }
+
+        // BEFORE ROUND PLAYS
+        let round = gameModule.getRound();
+        let player = gameModule.getPlayer(round.currPlayer);
+        updateBoard(tileNum, player.letter);
+
+        // AFTER ROUND PLAYS
+        const status = gameModule.playRound(tileNum);
+        round = gameModule.getRound();
+        player = gameModule.getPlayer(round.currPlayer);
+
+        switch (status) {
+            case "GAME CONTINUES":
+                gameDisplay.innerText = `Round ${round.num}: Player ${round.currPlayer} (${player.letter})`;
+                break;
+
+            case "DRAW":
+                gameDisplay.innerText = "Draw";
+                gameOver();
+                break;
+
+            case "WIN":
+                gameDisplay.innerText = "WIN";
+                gameOver();
+                break;
+
+            default:
+                break;
+        }
     }
 
     function initializeGame() {
-        let btnNewGame = document.querySelector("#new-game");
-        btnNewGame.addEventListener("click", () => {});
+        let player1 = document.getElementById("player-1-input");
+        let player2 = document.getElementById("player-2-input");
+
+        gameModule.newGame(
+            player1.value || "Player 1",
+            "X",
+            player2.value || "Player 2",
+            "O"
+        ); //TODO Add error check using return value of gameModule.newGame
 
         let tiles = document.querySelectorAll(".tile");
         tiles.forEach((tile) => {
+            tile.innerText = " ";
             tile.addEventListener("click", handleClick);
         });
+
+        gameDisplay.innerText = "Round 1: Player 1 (X)";
     }
 
     return { initializeGame };
@@ -168,6 +245,11 @@ const displayControlModule = (function () {
 
 // ----------------------------------------------------------------- //
 
-gameBoardModule.initializeArray();
+let btnNewGame = document.querySelector("#new-game-btn");
+btnNewGame.addEventListener("click", () => {
+    let newGameDialog = document.getElementById("new-game-dialog");
+    newGameDialog.showModal();
 
-displayControlModule.initializeGame();
+    let btnGameStart = document.getElementById("btn-game-start");
+    btnGameStart.addEventListener("click", displayControlModule.initializeGame);
+});
